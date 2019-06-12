@@ -7,5 +7,5 @@
                      "py-mpi4py" : ["+python", "+mpi"],
                      "conduit"   : ["+python"],
                      "py-sphinx" : ["+python", "+doc"]},
-"spack_clean_packages" : ["vtkm", "vtkh","conduit"]
+"spack_clean_packages" : ["vtkm", "vtkh","conduit","perfstubs"]
 }

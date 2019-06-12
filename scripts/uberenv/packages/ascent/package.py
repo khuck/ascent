@@ -77,6 +77,8 @@ class Ascent(Package):
     depends_on("conduit~python", when="~python")
     depends_on("conduit+python", when="+python+shared")
     depends_on("conduit~shared~python", when="~shared")
+    depends_on("perfstubs+static" when "~shared")
+    depends_on("perfstubs" when "+shared")
 
     #######################
     # Python
@@ -315,6 +317,9 @@ class Ascent(Package):
 
         cfg.write("# conduit from spack \n")
         cfg.write(cmake_cache_entry("CONDUIT_DIR", spec['conduit'].prefix))
+
+        cfg.write("# perfstubs from spack \n")
+        cfg.write(cmake_cache_entry("PERFSTUBS_DIR", spec['perfstubs'].prefix))
 
         #######################################################################
         # Optional Dependencies

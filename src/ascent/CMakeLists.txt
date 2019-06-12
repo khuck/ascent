@@ -226,6 +226,10 @@ if(ENABLE_OPENMP)
     list(APPEND ascent_thirdparty_libs openmp)
 endif()
 
+if(PERFSTUBS_FOUND)
+    list(APPEND ascent_thirdparty_libs perfstubs)
+endif()
+
 ##########################################
 # Build a serial version of ascent
 ##########################################

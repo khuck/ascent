@@ -56,6 +56,7 @@
 #include <ascent_empty_runtime.hpp>
 #include <ascent_flow_runtime.hpp>
 #include <runtimes/ascent_main_runtime.hpp>
+#include "perfstubs_api/Timer.h"
 
 #if defined(ASCENT_VTKH_ENABLED)
     #include <vtkh/vtkh.hpp>
@@ -95,6 +96,7 @@ Ascent::~Ascent()
 void
 Ascent::open()
 {
+    PERFSTUBS_SCOPED_TIMER_FUNC();
     Node opts;
     open(opts);
 }
@@ -275,6 +277,7 @@ Ascent::open(const conduit::Node &options)
 void
 Ascent::publish(const conduit::Node &data)
 {
+    PERFSTUBS_SCOPED_TIMER_FUNC();
     try
     {
         if(m_runtime != NULL)
@@ -314,6 +317,7 @@ Ascent::publish(const conduit::Node &data)
 void
 Ascent::execute(const conduit::Node &actions)
 {
+    PERFSTUBS_SCOPED_TIMER_FUNC();
     try
     {
         if(m_runtime != NULL)
@@ -401,6 +405,7 @@ Ascent::info(conduit::Node &info_out)
 void
 Ascent::close()
 {
+    PERFSTUBS_SCOPED_TIMER_FUNC();
     try
     {
         if(m_runtime != NULL)

@@ -42,89 +42,30 @@
 #
 ###############################################################################
 
-################################
-# Ascent 3rd Party Dependencies
-################################
-
 ###############################################################################
-# gtest, fruit, mpi,cuda, openmp, sphinx and doxygen are handled by blt
-###############################################################################
-
-################################
-# Setup Python if requested
-################################
-if(ENABLE_PYTHON)
-    include(cmake/thirdparty/SetupPython.cmake)
-    message(STATUS "Using Python Include: ${PYTHON_INCLUDE_DIRS}")
-    include_directories(${PYTHON_INCLUDE_DIRS})
-    # if we don't find python, throw a fatal error
-    if(NOT PYTHON_FOUND)
-        message(FATAL_ERROR "ENABLE_PYTHON is true, but Python wasn't found.")
-    endif()
-endif()
-
-################################
-# Conduit
-################################
-include(cmake/thirdparty/SetupConduit.cmake)
-
-
-################################################################
-################################################################
-#
-# 3rd Party Libs that underpin Ascent's Pipelines
-#
-################################################################
-################################################################
-
-
-################################
-# VTKm and supporting libs
-################################
-if(VTKM_DIR)
-    # explicitly setting this avoids a bug with VTKm's cuda
-    # arch detection logic
-    set(VTKm_CUDA_Architecture "kepler" CACHE PATH "" FORCE)
-
-    ################################
-    # VTKm
-    ################################
-    include(cmake/thirdparty/SetupVTKm.cmake)
-
-    ################################
-    # VTKh
-    ################################
-    include(cmake/thirdparty/SetupVTKh.cmake)
-endif()
-
-
-################################
 # Setup PerfStubs
-################################
-if(PERFSTUBS_DIR)
-    include(cmake/thirdparty/SetupPerfStubs.cmake)
+###############################################################################
+
+if(NOT PERFSTUBS_DIR)
+    MESSAGE(FATAL_ERROR "PERFSTUBS support needs explicit PERFSTUBS_DIR")
 endif()
 
-################################
-# Setup HDF5
-################################
-if(HDF5_DIR)
-    include(cmake/thirdparty/SetupHDF5.cmake)
+MESSAGE(STATUS "Looking for PERFSTUBS using PERFSTUBS_DIR = ${PERFSTUBS_DIR}")
+
+# use PERFSTUBS_DIR to setup the options that cmake's find PERFSTUBS needs
+file(GLOB PERFSTUBS_CMAKE_FILE "${PERFSTUBS_DIR}/lib/cmake/perfstubs-config.cmake")
+
+if(NOT PERFSTUBS_CMAKE_FILE)
+    MESSAGE(FATAL_ERROR "Failed to find ${PERFSTUBS_CMAKE_FILE} at PERFSTUBS_DIR=${PERFSTUBS_DIR}")
 endif()
 
-################################
-# Setup MFEM
-################################
-if (MFEM_DIR)
-  include(cmake/thirdparty/SetupMFEM.cmake)
-endif()
+include("${PERFSTUBS_CMAKE_FILE}")
 
+set(PERFSTUBS_FOUND TRUE)
+message(STATUS "Found PERFSTUBS Include Dirs: ${PERFSTUBS_INCLUDE_DIRS}")
 
-################################
-# Setup ADIOS
-################################
-if (ADIOS_DIR)
-  include(cmake/thirdparty/SetupADIOS.cmake)
-endif()
-
-
+blt_register_library(NAME perfstubs
+                     INCLUDES ${PERFSTUBS_INCLUDE_DIRS}
+                     COMPILE_FLAGS ${PERFSTUBS_COMPILE_OPTIONS}
+                     LIBRARIES ${PERFSTUBS_LIBRARIES}
+                     )
