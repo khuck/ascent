@@ -77,8 +77,7 @@ class Ascent(Package):
     depends_on("conduit~python", when="~python")
     depends_on("conduit+python", when="+python+shared")
     depends_on("conduit~shared~python", when="~shared")
-    depends_on("perfstubs+static" when "~shared")
-    depends_on("perfstubs" when "+shared")
+    depends_on("perfstubs")
 
     #######################
     # Python
