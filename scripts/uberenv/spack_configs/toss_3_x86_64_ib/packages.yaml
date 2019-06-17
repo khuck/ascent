@@ -16,6 +16,7 @@
 # -------------------------------------------------------------------------
 packages:
   all:
+    variants: cuda_arch=60
     compiler: [gcc, intel, pgi, clang, xl, nag]
     providers:
       awk: [gawk]
@@ -54,7 +55,7 @@ packages:
 # LLNL toss3 CUDA 
   cuda:
     modules:
-       cuda@9.1: cuda/9.1.85
+       cuda@9.2: cuda/9.2.88
     buildable: False
 # LLNL toss3 mvapich2
   mvapich2:
