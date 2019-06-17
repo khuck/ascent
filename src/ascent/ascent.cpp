@@ -277,6 +277,7 @@ Ascent::open(const conduit::Node &options)
 void
 Ascent::publish(const conduit::Node &data)
 {
+    PERFSTUBS_STATIC_PHASE_START("Ascent");
     PERFSTUBS_SCOPED_TIMER_FUNC();
     try
     {
@@ -317,6 +318,7 @@ Ascent::publish(const conduit::Node &data)
 void
 Ascent::execute(const conduit::Node &actions)
 {
+    { // begin timed scope
     PERFSTUBS_SCOPED_TIMER_FUNC();
     try
     {
@@ -363,6 +365,8 @@ Ascent::execute(const conduit::Node &actions)
           }
         }
     }
+    } // end timed scope
+    PERFSTUBS_STATIC_PHASE_STOP("Ascent");
 }
 
 
