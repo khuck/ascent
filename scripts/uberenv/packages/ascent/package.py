@@ -38,7 +38,7 @@ class Ascent(Package):
     maintainers = ['cyrush']
 
     version('develop',
-            git='https://github.com/Alpine-DAV/ascent.git',
+            git='https://github.com/khuck/ascent.git',
             branch='develop',
             submodules=True,
             preferred=True)
