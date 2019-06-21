@@ -58,6 +58,8 @@
 #include <limits.h>
 #include <cstdlib>
 
+#include "perfstubs_api/Timer.h"
+
 using namespace conduit;
 using namespace std;
 
@@ -337,7 +339,10 @@ Workspace::execute()
 
             Timer t_flt_exec;
             // execute
+            {
+            PERFSTUBS_SCOPED_TIMER(f_name);
             f->execute();
+            }
 
             m_timing_info << m_timing_exec_count
                           << " " << f->name()

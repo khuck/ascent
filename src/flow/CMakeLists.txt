@@ -102,6 +102,10 @@ if(PYTHON_FOUND)
 
 endif()
 
+if(PERFSTUBS_FOUND)
+    list(APPEND flow_thirdparty_libs perfstubs)
+endif()
+
 ##########################################
 # Build flow
 ##########################################
