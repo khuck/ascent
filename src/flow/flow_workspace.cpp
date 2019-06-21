@@ -340,7 +340,9 @@ Workspace::execute()
             Timer t_flt_exec;
             // execute
             {
-            PERFSTUBS_SCOPED_TIMER(f_name);
+            std::stringstream ss;
+            ss << "flow:" << f_name;
+            PERFSTUBS_SCOPED_TIMER(ss.str());
             f->execute();
             }
 
