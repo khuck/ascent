@@ -441,6 +441,10 @@ def main():
     cfg_dir = uberenv_spack_config_dir(opts, uberenv_path)
     patch_spack(dest_spack, uberenv_path, cfg_dir, pkgs)
 
+    # thorougly set up the spack environment
+    spec_cmd = "spack/bin/spack bootstrap"
+    res = sexe(spec_cmd, echo=True)
+
     # show the spec for what will be built
     spec_cmd = "spack/bin/spack spec " + uberenv_pkg_name + opts["spec"]
     res = sexe(spec_cmd, echo=True)
