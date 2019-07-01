@@ -98,6 +98,11 @@ if(MPI_FOUND)
            list(APPEND lulesh_par_deps openmp)
     endif()
 
+    if(PERFSTUBS_FOUND)
+        list(APPEND lulesh_par_deps perfstubs)
+        list(APPEND lulesh_ser_deps perfstubs)
+    endif()
+
     blt_add_executable(
         NAME        lulesh_par
         SOURCES     ${LULESH_SOURCES}

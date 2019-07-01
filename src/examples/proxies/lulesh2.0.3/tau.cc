@@ -3,14 +3,29 @@
 */
 
 #include <vector>
+#include <string>
+#include <string.h>
+#include <sstream>
+#include <ostream>
 #include "conduit.hpp"
 #include "ascent.hpp"
 #if USE_MPI
 #include "mpi.h"
 #endif
+#include "perfstubs_api/Timer.h"
 
 using namespace conduit;
 using namespace ascent;
+
+char * fix_timer_name(const char * timer_name) {
+    // remove source information
+    std::string tmp(timer_name);
+    std::string delimiter(" [{");
+    std::string token = tmp.substr(0, tmp.find(delimiter));
+    // trim trailing whitespace - MPI events
+    token.erase(token.find_last_not_of(" \t\n\r\f\v") + 1);
+    return strdup(token.c_str());
+}
 
 /******************************************/
 
@@ -38,7 +53,7 @@ int ascent_performance(int current_time, int current_cycle)
 
    conduit::Node scenes;
    scenes["s2/plots/p1/type"]  = "pseudocolor";
-   scenes["s2/plots/p1/field"] = "LagrangeLeapFrog";
+   scenes["s2/plots/p1/field"] = "0_MPI_Wait()_Inclusive_TIME";
    //double vec3[3];
    //vec3[0] = -0.6; vec3[1] = -0.6; vec3[2] = -0.8;
    //scenes["s2/renders/r1/camera/position"].set_float64_ptr(vec3,3);
@@ -84,9 +99,36 @@ int ascent_performance(int current_time, int current_cycle)
    tau_node["topologies/mesh/elements/dims/j"] = 1;
    tau_node["topologies/mesh/elements/dims/k"] = 1;
 
-   tau_node["fields/LagrangeLeapFrog/association"] = "element";
-   tau_node["fields/LagrangeLeapFrog/topology"]    = "mesh";
-   tau_node["fields/LagrangeLeapFrog/values"].set(myRank+1);
+   // tau_node["fields/MPI_Wait()/association"] = "element";
+   // tau_node["fields/MPI_Wait()/topology"]    = "mesh";
+   // tau_node["fields/MPI_Wait()/values"].set(myRank+1);
+   perftool_timer_data_t timer_data;
+   external::profiler::Timer::GetTimerData(&timer_data);
+   int index = 0;
+    for (int i = 0; i < timer_data.num_timers; i++)
+    {
+        for (int k = 0; k < timer_data.num_threads; k++)
+        {
+            for (int j = 0; j < timer_data.num_metrics; j++)
+            {
+                std::stringstream ss;
+                ss << "fields/" << k << "_";
+                ss << fix_timer_name(timer_data.timer_names[i]);
+                ss << "_" << timer_data.metric_names[j];
+                std::string assoc(ss.str());
+                std::string topo(ss.str());
+                std::string val(ss.str());
+                assoc.append("/association");
+                topo.append("/topology");
+                val.append("/values");
+                tau_node[assoc] = "element";
+                tau_node[topo] = "mesh";
+                tau_node[val].set(timer_data.values[index]);
+                index = index + 1;
+            }
+        }
+    }
+    external::profiler::Timer::FreeTimerData(&timer_data);
 
    ascent.publish(tau_node);
    ascent.execute(actions);
