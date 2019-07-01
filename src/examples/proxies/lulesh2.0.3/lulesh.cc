@@ -2773,7 +2773,7 @@ void LagrangeLeapFrog(Domain& domain)
 
 
 /******************************************/
-int ascent_performance(void);
+int ascent_performance(int current_time, int current_cycle);
 
 int main(int argc, char *argv[])
 {
@@ -2911,7 +2911,7 @@ int main(int argc, char *argv[])
             //
             ascent.publish(locDom->visitNode());
             ascent.execute(actions);
-            ascent_performance();
+            ascent_performance(locDom->time(), locDom->cycle());
 
       }
    }

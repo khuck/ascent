@@ -2,21 +2,24 @@
 
 */
 
+#include <vector>
 #include "conduit.hpp"
 #include "ascent.hpp"
+#if USE_MPI
+#include "mpi.h"
+#endif
 
 using namespace conduit;
 using namespace ascent;
 
 /******************************************/
 
-int ascent_performance(void)
+int ascent_performance(int current_time, int current_cycle)
 {
-   Int_t numRanks = 1;
-   Int_t myRank = 0;
+   int numRanks = 1;
+   int myRank = 0;
 
 #if USE_MPI
-   MPI_Init(&argc, &argv) ;
    MPI_Comm_size(MPI_COMM_WORLD, &numRanks) ;
    MPI_Comm_rank(MPI_COMM_WORLD, &myRank) ;
 #endif
@@ -34,11 +37,11 @@ int ascent_performance(void)
     ascent.open(ascent_opts);
 
    conduit::Node scenes;
-   scenes["s1/plots/p1/type"]  = "pseudocolor";
-   scenes["s1/plots/p1/field"] = "LagrangeLeapFrog";
+   scenes["s2/plots/p1/type"]  = "pseudocolor";
+   scenes["s2/plots/p1/field"] = "LagrangeLeapFrog";
    //double vec3[3];
    //vec3[0] = -0.6; vec3[1] = -0.6; vec3[2] = -0.8;
-   //scenes["s1/renders/r1/camera/position"].set_float64_ptr(vec3,3);
+   //scenes["s2/renders/r1/camera/position"].set_float64_ptr(vec3,3);
 
    conduit::Node actions;
    conduit::Node &add_plots = actions.append();
@@ -51,28 +54,41 @@ int ascent_performance(void)
    reset_action["action"] = "reset";
 
 /* TAU ascent nodes */
+   std::vector<double> x ;  /* coordinates */
+   std::vector<double> y ;  /* coordinates */
+   std::vector<double> z ;  /* coordinates */
+   x.resize(numRanks);
+   y.resize(numRanks);
+   z.resize(numRanks);
+   for (int i = 0 ; i < numRanks ; i++) {
+     double tmp = ((double)(i)) / ((double)(numRanks));
+     x[i] = tmp;
+     y[i] = tmp;
+     z[i] = tmp;
+   }
+
    conduit::Node tau_node;
-   tau_node["state/time"].set_external(&m_time);
-   tau_node["state/cycle"].set_external(&m_cycle);
+   tau_node["state/time"].set_external(&current_time);
+   tau_node["state/cycle"].set_external(&current_cycle);
    tau_node["state/domain_id"] = myRank;
    tau_node["state/info"] = "In Situ Pseudocolor rendering of Pressure from <br> LULESH Shock-Hydro Proxy Simulation";
    tau_node["coordsets/coords/type"] = "explicit";
-   tau_node["coordsets/coords/values/x"].set(numRanks);
-   tau_node["coordsets/coords/values/y"].set(numRanks);
-   tau_node["coordsets/coords/values/z"].set(numRanks);
+   tau_node["coordsets/coords/values/x"].set(x);
+   tau_node["coordsets/coords/values/y"].set(y);
+   tau_node["coordsets/coords/values/z"].set(z);
 
    tau_node["topologies/mesh/type"] = "structured";
    tau_node["topologies/mesh/coordset"] = "coords";
 
-   tau_node["topologies/mesh/elements/dims/i"] = myRank;
-   tau_node["topologies/mesh/elements/dims/j"] = myRank;
-   tau_node["topologies/mesh/elements/dims/k"] = myRank;
+   tau_node["topologies/mesh/elements/dims/i"] = 1;
+   tau_node["topologies/mesh/elements/dims/j"] = 1;
+   tau_node["topologies/mesh/elements/dims/k"] = 1;
 
    tau_node["fields/LagrangeLeapFrog/association"] = "element";
    tau_node["fields/LagrangeLeapFrog/topology"]    = "mesh";
-   tau_node["fields/LagrangeLeapFrog/values"].set(myRank);
+   tau_node["fields/LagrangeLeapFrog/values"].set(myRank+1);
 
-   ascent.publish(locDom->visitNode());
+   ascent.publish(tau_node);
    ascent.execute(actions);
    ascent.close();
 

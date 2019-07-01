@@ -14,6 +14,18 @@
           }
         },
         "image_prefix": "energy_%04d"
+      },
+      "s2":
+      {
+        "plots":
+        {
+          "p2":
+          {
+            "type": "pseudocolor",
+            "field": "LagrangeLeapFrog"
+          }
+        },
+        "image_prefix": "LagrangeLeapFrog_%04d"
       }
     }
   },
