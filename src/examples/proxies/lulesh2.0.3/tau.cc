@@ -54,15 +54,24 @@ int ascent_performance(int current_time, int current_cycle)
 #if USE_MPI
     ascent_opts["mpi_comm"] = MPI_Comm_c2f(MPI_COMM_WORLD);
 #endif
+    ascent_opts["actions_file"] = "disabled.json";
 
     ascent.open(ascent_opts);
 
    conduit::Node scenes;
-   scenes["s2/plots/p1/type"]  = "pseudocolor";
-   scenes["s2/plots/p1/field"] = "0_MPI_Wait()_Inclusive_TIME";
+   scenes["s2/plots/p2/type"]  = "pseudocolor";
+   scenes["s2/plots/p2/field"] = "0_LagrangeLeapFrog_Inclusive_TIME";
+   scenes["s2/image_prefix"] = "PerfData_%04d";
    //double vec3[3];
-   //vec3[0] = -0.6; vec3[1] = -0.6; vec3[2] = -0.8;
+   //vec3[0] = -1.0; vec3[1] = -1.0; vec3[2] = -1.0;
    //scenes["s2/renders/r1/camera/position"].set_float64_ptr(vec3,3);
+   double vec3[3];
+   vec3[0] = 0.5; vec3[1] = 0.5; vec3[2] = 0.5;
+   scenes["s2/renders/r1/camera/look_at"].set_float64_ptr(vec3,3);
+   vec3[0] = 2.0; vec3[1] = 1.25; vec3[2] = 2.5;
+   scenes["s2/renders/r1/camera/position"].set_float64_ptr(vec3,3);
+   //scenes["s2/renders/r1/camera/azimuth"] = 10.0;
+   //scenes["s2/renders/r1/camera/elevation"] = -10.0;
 
    conduit::Node actions;
    conduit::Node &add_plots = actions.append();
@@ -82,7 +91,7 @@ int ascent_performance(int current_time, int current_cycle)
    y.resize(numRanks);
    z.resize(numRanks);
    for (int i = 0 ; i < numRanks ; i++) {
-     double tmp = ((double)(i)) / ((double)(numRanks));
+     double tmp = ((double)(i)) / ((double)(numRanks-1));
      x[i] = tmp;
      y[i] = tmp;
      z[i] = tmp;
@@ -105,15 +114,13 @@ int ascent_performance(int current_time, int current_cycle)
    tau_node["topologies/mesh/elements/dims/j"] = 1;
    tau_node["topologies/mesh/elements/dims/k"] = 1;
 
-   // tau_node["fields/MPI_Wait()/association"] = "element";
-   // tau_node["fields/MPI_Wait()/topology"]    = "mesh";
-   // tau_node["fields/MPI_Wait()/values"].set(myRank+1);
    perftool_timer_data_t timer_data;
    external::profiler::Timer::GetTimerData(&timer_data);
    int index = 0;
     for (int i = 0; i < timer_data.num_timers; i++)
     {
-        for (int k = 0; k < timer_data.num_threads; k++)
+        //for (int k = 0; k < timer_data.num_threads; k++)
+        for (int k = 0; k < 1; k++)
         {
             for (int j = 0; j < timer_data.num_metrics; j++)
             {
@@ -124,6 +131,9 @@ int ascent_performance(int current_time, int current_cycle)
                 std::string assoc(ss.str());
                 std::string topo(ss.str());
                 std::string val(ss.str());
+                if (val.find("LagrangeLeapFrog") != std::string::npos) {
+                    std::cout << timer_data.values[index] << std::endl;
+                } 
                 assoc.append("/association");
                 topo.append("/topology");
                 val.append("/values");
@@ -162,7 +172,6 @@ int ascent_performance(int current_time, int current_cycle)
                 assoc.append("/association");
                 topo.append("/topology");
                 val.append("/values");
-                std::cout << val << std::endl;
                 tau_node[assoc] = "element";
                 tau_node[topo] = "mesh";
                 switch(j) {
@@ -188,6 +197,15 @@ int ascent_performance(int current_time, int current_cycle)
         }
     }
     external::profiler::Timer::FreeCounterData(&counter_data);
+
+    Node verify_info;
+    if(!conduit::blueprint::mesh::verify(tau_node,verify_info))
+    {
+        // verify failed, print error message
+        ASCENT_INFO("Error: Mesh Blueprint Verify Failed!");
+        // show details of what went awry
+        verify_info.print();
+    }
 
    ascent.publish(tau_node);
    ascent.execute(actions);

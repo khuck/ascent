@@ -164,6 +164,7 @@ Additional BSD Notice
 
 #include "conduit.hpp"
 #include "ascent.hpp"
+#include "perfstubs_api/Timer.h"
 
 using namespace conduit;
 using namespace ascent;
@@ -2727,6 +2728,7 @@ void CalcTimeConstraintsForElems(Domain& domain) {
 static inline
 void LagrangeLeapFrog(Domain& domain)
 {
+   PERFSTUBS_SCOPED_TIMER_FUNC();
 #ifdef SEDOV_SYNC_POS_VEL_LATE
    Domain_member fieldData[6] ;
 #endif
