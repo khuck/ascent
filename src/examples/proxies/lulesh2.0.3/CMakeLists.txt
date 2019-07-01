@@ -50,6 +50,7 @@
 
 set(LULESH_SOURCES
     lulesh.cc
+    tau.cc
     lulesh-comm.cc
     lulesh-viz.cc
     lulesh-util.cc
