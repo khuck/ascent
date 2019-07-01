@@ -7,6 +7,8 @@
 #include <string.h>
 #include <sstream>
 #include <ostream>
+#include <vector>
+#include <algorithm>
 #include "conduit.hpp"
 #include "ascent.hpp"
 #if USE_MPI
@@ -24,6 +26,10 @@ char * fix_timer_name(const char * timer_name) {
     std::string token = tmp.substr(0, tmp.find(delimiter));
     // trim trailing whitespace - MPI events
     token.erase(token.find_last_not_of(" \t\n\r\f\v") + 1);
+    // replace any other spaces with underscores
+    std::transform(token.begin(), token.end(), token.begin(), [](char ch) {
+        return ch == ' ' ? '_' : ch;
+    });
     return strdup(token.c_str());
 }
 
@@ -129,6 +135,59 @@ int ascent_performance(int current_time, int current_cycle)
         }
     }
     external::profiler::Timer::FreeTimerData(&timer_data);
+
+   perftool_counter_data_t counter_data;
+   external::profiler::Timer::GetCounterData(&counter_data);
+   index = 0;
+   std::vector<std::string> metrics;
+   metrics.resize(5);
+   metrics.push_back("num_samples");
+   metrics.push_back("value_total");
+   metrics.push_back("value_min");
+   metrics.push_back("value_max");
+   metrics.push_back("value_sumsqr");
+    for (int i = 0; i < counter_data.num_counters; i++)
+    {
+        for (int k = 0; k < counter_data.num_threads; k++)
+        {
+            for (size_t j = 0; j < metrics.size(); j++)
+            {
+                std::stringstream ss;
+                ss << "fields/" << k << "_";
+                ss << fix_timer_name(counter_data.counter_names[i]);
+                ss << "_" << metrics[j];
+                std::string assoc(ss.str());
+                std::string topo(ss.str());
+                std::string val(ss.str());
+                assoc.append("/association");
+                topo.append("/topology");
+                val.append("/values");
+                std::cout << val << std::endl;
+                tau_node[assoc] = "element";
+                tau_node[topo] = "mesh";
+                switch(j) {
+                    case 0:
+                        tau_node[val].set(counter_data.num_samples[index]);
+                        break;
+                    case 1:
+                        tau_node[val].set(counter_data.value_total[index]);
+                        break;
+                    case 2:
+                        tau_node[val].set(counter_data.value_min[index]);
+                        break;
+                    case 3:
+                        tau_node[val].set(counter_data.value_max[index]);
+                        break;
+                    case 4:
+                    default:
+                        tau_node[val].set(counter_data.value_sumsqr[index]);
+                        break;
+                }
+                index = index + 1;
+            }
+        }
+    }
+    external::profiler::Timer::FreeCounterData(&counter_data);
 
    ascent.publish(tau_node);
    ascent.execute(actions);
