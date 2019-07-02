@@ -35,7 +35,7 @@ char * fix_timer_name(const char * timer_name) {
 
 /******************************************/
 
-int ascent_performance(int current_time, int current_cycle)
+int ascent_performance(conduit::Node &node, int length, int current_time, int current_cycle)
 {
    int numRanks = 1;
    int myRank = 0;
@@ -68,7 +68,7 @@ int ascent_performance(int current_time, int current_cycle)
    double vec3[3];
    vec3[0] = 0.5; vec3[1] = 0.5; vec3[2] = 0.5;
    scenes["s2/renders/r1/camera/look_at"].set_float64_ptr(vec3,3);
-   vec3[0] = 2.0; vec3[1] = 1.25; vec3[2] = 2.5;
+   vec3[0] = -1.0; vec3[1] = -0.75; vec3[2] = -1.25;
    scenes["s2/renders/r1/camera/position"].set_float64_ptr(vec3,3);
    //scenes["s2/renders/r1/camera/azimuth"] = 10.0;
    //scenes["s2/renders/r1/camera/elevation"] = -10.0;
@@ -83,6 +83,7 @@ int ascent_performance(int current_time, int current_cycle)
    conduit::Node &reset_action = actions.append();
    reset_action["action"] = "reset";
 
+#if 0
 /* TAU ascent nodes */
    std::vector<double> x ;  /* coordinates */
    std::vector<double> y ;  /* coordinates */
@@ -113,14 +114,16 @@ int ascent_performance(int current_time, int current_cycle)
    tau_node["topologies/mesh/elements/dims/i"] = 1;
    tau_node["topologies/mesh/elements/dims/j"] = 1;
    tau_node["topologies/mesh/elements/dims/k"] = 1;
+#endif
 
    perftool_timer_data_t timer_data;
    external::profiler::Timer::GetTimerData(&timer_data);
    int index = 0;
+   int nElems = length * length * length;
     for (int i = 0; i < timer_data.num_timers; i++)
     {
-        //for (int k = 0; k < timer_data.num_threads; k++)
-        for (int k = 0; k < 1; k++)
+        for (int k = 0; k < timer_data.num_threads; k++)
+        //for (int k = 0; k < 1; k++)
         {
             for (int j = 0; j < timer_data.num_metrics; j++)
             {
@@ -131,21 +134,26 @@ int ascent_performance(int current_time, int current_cycle)
                 std::string assoc(ss.str());
                 std::string topo(ss.str());
                 std::string val(ss.str());
-                if (val.find("LagrangeLeapFrog") != std::string::npos) {
-                    std::cout << timer_data.values[index] << std::endl;
-                } 
                 assoc.append("/association");
                 topo.append("/topology");
                 val.append("/values");
+#if 0
                 tau_node[assoc] = "element";
                 tau_node[topo] = "mesh";
                 tau_node[val].set(timer_data.values[index]);
+#else
+                node[assoc] = "element";
+                node[topo] = "mesh";
+                std::vector<double> vec(nElems, timer_data.values[index]);
+                node[val].set(vec);
+#endif
                 index = index + 1;
             }
         }
     }
     external::profiler::Timer::FreeTimerData(&timer_data);
 
+#if 0
    perftool_counter_data_t counter_data;
    external::profiler::Timer::GetCounterData(&counter_data);
    index = 0;
@@ -208,6 +216,9 @@ int ascent_performance(int current_time, int current_cycle)
     }
 
    ascent.publish(tau_node);
+#else
+   ascent.publish(node);
+#endif
    ascent.execute(actions);
    ascent.close();
 

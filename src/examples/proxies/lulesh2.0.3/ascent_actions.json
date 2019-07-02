@@ -13,6 +13,17 @@
             "field": "e"
           }
         },
+        "renders":
+        {
+          "r1":
+          {
+            "camera":
+            {
+              "position": [-1.0, -0.75, -1.25],
+              "look_at": [0.5, 0.5, 0.5]
+            }
+          }
+        },
         "image_prefix": "energy_%04d"
       }
     }

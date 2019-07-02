@@ -2728,7 +2728,6 @@ void CalcTimeConstraintsForElems(Domain& domain) {
 static inline
 void LagrangeLeapFrog(Domain& domain)
 {
-   PERFSTUBS_SCOPED_TIMER_FUNC();
 #ifdef SEDOV_SYNC_POS_VEL_LATE
    Domain_member fieldData[6] ;
 #endif
@@ -2775,7 +2774,7 @@ void LagrangeLeapFrog(Domain& domain)
 
 
 /******************************************/
-int ascent_performance(int current_time, int current_cycle);
+int ascent_performance(conduit::Node &node, int size, int current_time, int current_cycle);
 
 int main(int argc, char *argv[])
 {
@@ -2862,6 +2861,7 @@ int main(int argc, char *argv[])
 #if USE_MPI
     ascent_opts["mpi_comm"] = MPI_Comm_c2f(MPI_COMM_WORLD);
 #endif
+    //ascent_opts["actions_file"] = "disabled.json";
 
     ascent.open(ascent_opts);
    // BEGIN timestep to solution */
@@ -2879,9 +2879,15 @@ int main(int argc, char *argv[])
    conduit::Node scenes;
    scenes["s1/plots/p1/type"]  = "pseudocolor";
    scenes["s1/plots/p1/field"] = "e";
-   double vec3[3];
-   vec3[0] = -0.6; vec3[1] = -0.6; vec3[2] = -0.8;
-   scenes["s1/renders/r1/camera/position"].set_float64_ptr(vec3,3);
+   //double vec3[3];
+   //vec3[0] = -0.6; vec3[1] = -0.6; vec3[2] = -0.8;
+   //scenes["s1/renders/r1/camera/position"].set_float64_ptr(vec3,3);
+   //scenes["s1/image_prefix"] = "energy_%04d";
+   //double vec3[3];
+   //vec3[0] = 0.5; vec3[1] = 0.5; vec3[2] = 0.5;
+   //scenes["s1/renders/r1/camera/look_at"].set_float64_ptr(vec3,3);
+   //vec3[0] = -2.0; vec3[1] = -1.25; vec3[2] = -2.5;
+   //scenes["s1/renders/r1/camera/position"].set_float64_ptr(vec3,3);
 
    conduit::Node actions;
    conduit::Node &add_plots = actions.append();
@@ -2895,6 +2901,7 @@ int main(int argc, char *argv[])
 
    while((locDom->time() < locDom->stoptime()) && (locDom->cycle() < opts.its)) {
      {
+        PERFSTUBS_SCOPED_TIMER("LagrangeLeapFrog");
         ASCENT_BLOCK_TIMER(LULESH_MAIN_LOOP)
         TimeIncrement(*locDom) ;
         LagrangeLeapFrog(*locDom) ;
@@ -2913,8 +2920,7 @@ int main(int argc, char *argv[])
             //
             ascent.publish(locDom->visitNode());
             ascent.execute(actions);
-            ascent_performance(locDom->time(), locDom->cycle());
-
+            ascent_performance(locDom->visitNode(), opts.nx, locDom->time(), locDom->cycle());
       }
    }
    ascent.close();
