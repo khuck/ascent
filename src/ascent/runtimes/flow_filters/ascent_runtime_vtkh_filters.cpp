@@ -171,6 +171,7 @@ check_renders_surprises(const conduit::Node &renders_node)
   r_valid_paths.push_back("image_name");
   r_valid_paths.push_back("image_width");
   r_valid_paths.push_back("image_height");
+  r_valid_paths.push_back("scene_bounds");
   r_valid_paths.push_back("camera/look_at");
   r_valid_paths.push_back("camera/position");
   r_valid_paths.push_back("camera/up");
@@ -180,14 +181,13 @@ check_renders_surprises(const conduit::Node &renders_node)
   r_valid_paths.push_back("camera/zoom");
   r_valid_paths.push_back("camera/near_plane");
   r_valid_paths.push_back("camera/far_plane");
+  r_valid_paths.push_back("camera/azimuth");
+  r_valid_paths.push_back("camera/elevation");
   r_valid_paths.push_back("type");
   r_valid_paths.push_back("phi");
   r_valid_paths.push_back("theta");
   r_valid_paths.push_back("db_name");
-  // TODO: document
   r_valid_paths.push_back("render_bg");
-  r_valid_paths.push_back("camera/azimuth");
-  r_valid_paths.push_back("camera/elevation");
   r_valid_paths.push_back("annotations");
   r_valid_paths.push_back("output_path");
   r_valid_paths.push_back("fg_color");
@@ -455,6 +455,10 @@ public:
     if(rank == 0 && !conduit::utils::is_directory(m_db_path))
     {
         conduit::utils::create_directory(m_db_path);
+        // copy over cinema web resources
+        std::string cinema_root = conduit::utils::join_file_path(ASCENT_WEB_CLIENT_ROOT,
+                                                                 "cinema");
+        ascent::copy_directory(cinema_root, m_db_path);
     }
 
     std::stringstream ss;
@@ -2472,7 +2476,27 @@ ExecScene::execute()
     for(int i = 0; i < renders->size(); ++i)
     {
       const std::string image_name = renders->at(i).GetImageName() + ".png";
-      image_list->append() = image_name;
+      conduit::Node image_data;
+      image_data["image_name"] = image_name;
+      image_data["image_width"] = renders->at(i).GetWidth();
+      image_data["image_height"] = renders->at(i).GetHeight();
+
+      image_data["camera/position"].set(&renders->at(i).GetCamera().GetPosition()[0],3);
+      image_data["camera/look_at"].set(&renders->at(i).GetCamera().GetLookAt()[0],3);
+      image_data["camera/up"].set(&renders->at(i).GetCamera().GetViewUp()[0],3);
+      image_data["camera/zoom"] = renders->at(i).GetCamera().GetZoom();
+      image_data["camera/fov"] = renders->at(i).GetCamera().GetFieldOfView();
+      vtkm::Bounds bounds=  renders->at(i).GetSceneBounds();
+      double coord_bounds [6] = {bounds.X.Min,
+                                 bounds.Y.Min,
+                                 bounds.Z.Min,
+                                 bounds.X.Max,
+                                 bounds.Y.Max,
+                                 bounds.Z.Max};
+
+      image_data["scene_bounds"].set(coord_bounds, 6);
+
+      image_list->append() = image_data;
     }
 
 }
