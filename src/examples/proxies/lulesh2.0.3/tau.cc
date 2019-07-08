@@ -62,16 +62,27 @@ int ascent_performance(conduit::Node &node, int length, int current_time, int cu
    scenes["s2/plots/p2/type"]  = "pseudocolor";
    scenes["s2/plots/p2/field"] = "0_LULESH_MAIN_LOOP_Inclusive_TIME";
    scenes["s2/image_prefix"] = "LULESH_MAIN_LOOP_%04d";
-   //double vec3[3];
-   //vec3[0] = -1.0; vec3[1] = -1.0; vec3[2] = -1.0;
-   //scenes["s2/renders/r1/camera/position"].set_float64_ptr(vec3,3);
    double vec3[3];
    vec3[0] = 0.5; vec3[1] = 0.5; vec3[2] = 0.5;
    scenes["s2/renders/r1/camera/look_at"].set_float64_ptr(vec3,3);
    vec3[0] = -1.0; vec3[1] = -0.75; vec3[2] = -1.25;
    scenes["s2/renders/r1/camera/position"].set_float64_ptr(vec3,3);
-   //scenes["s2/renders/r1/camera/azimuth"] = 10.0;
-   //scenes["s2/renders/r1/camera/elevation"] = -10.0;
+
+   scenes["s3/plots/p3/type"]  = "pseudocolor";
+   scenes["s3/plots/p3/field"] = "0_LULESH_MAIN_LOOP_Inclusive_TIME_RELATIVE";
+   scenes["s3/image_prefix"] = "LULESH_MAIN_LOOP_RELATIVE_%04d";
+   vec3[0] = 0.5; vec3[1] = 0.5; vec3[2] = 0.5;
+   scenes["s3/renders/r1/camera/look_at"].set_float64_ptr(vec3,3);
+   vec3[0] = -1.0; vec3[1] = -0.75; vec3[2] = -1.25;
+   scenes["s3/renders/r1/camera/position"].set_float64_ptr(vec3,3);
+
+   scenes["s4/plots/p4/type"]  = "pseudocolor";
+   scenes["s4/plots/p4/field"] = "0_LULESH_MAIN_LOOP_Inclusive_TIME_DIFFERENTIAL";
+   scenes["s4/image_prefix"] = "LULESH_MAIN_LOOP_DIFFERENTIAL_%04d";
+   vec3[0] = 0.5; vec3[1] = 0.5; vec3[2] = 0.5;
+   scenes["s4/renders/r1/camera/look_at"].set_float64_ptr(vec3,3);
+   vec3[0] = -1.0; vec3[1] = -0.75; vec3[2] = -1.25;
+   scenes["s4/renders/r1/camera/position"].set_float64_ptr(vec3,3);
 
    conduit::Node actions;
    conduit::Node &add_plots = actions.append();
@@ -116,6 +127,11 @@ int ascent_performance(conduit::Node &node, int length, int current_time, int cu
    tau_node["topologies/mesh/elements/dims/k"] = 1;
 #endif
 
+   static double previous = 0.0;
+   static double previous_relative = 0.0;
+   static double relative = 0.0;
+   static double differential = 0.0;
+
    perftool_timer_data_t timer_data;
    external::profiler::Timer::GetTimerData(&timer_data);
    int index = 0;
@@ -146,6 +162,25 @@ int ascent_performance(conduit::Node &node, int length, int current_time, int cu
                 node[topo] = "mesh";
                 std::vector<double> vec(nElems, timer_data.values[index]);
                 node[val].set(vec);
+#endif
+#if 1
+                if (val.compare("fields/0_LULESH_MAIN_LOOP_Inclusive_TIME/values") == 0) {
+                    // compute relative value
+                    relative = timer_data.values[index] - previous;
+                    node["fields/0_LULESH_MAIN_LOOP_Inclusive_TIME_RELATIVE/association"] = "element";
+                    node["fields/0_LULESH_MAIN_LOOP_Inclusive_TIME_RELATIVE/topology"] = "mesh";
+                    std::vector<double> relative_vec(nElems, relative);
+                    node["fields/0_LULESH_MAIN_LOOP_Inclusive_TIME_RELATIVE/values"].set(relative_vec);
+                    // compute differential value
+                    differential = relative - previous_relative;
+                    node["fields/0_LULESH_MAIN_LOOP_Inclusive_TIME_DIFFERENTIAL/association"] = "element";
+                    node["fields/0_LULESH_MAIN_LOOP_Inclusive_TIME_DIFFERENTIAL/topology"] = "mesh";
+                    std::vector<double> differential_vec(nElems, differential);
+                    node["fields/0_LULESH_MAIN_LOOP_Inclusive_TIME_DIFFERENTIAL/values"].set(differential_vec);
+                    // set up for next iteration
+                    previous = timer_data.values[index];
+                    previous_relative = relative;
+                }
 #endif
                 index = index + 1;
             }
