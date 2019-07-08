@@ -62,8 +62,7 @@
 #
 ###############################################################################
 
-#ASCENT_DIR ?= ../../../..
-ASCENT_DIR ?= /Users/khuck/src/Alpine-Ascent/tutorial/ascent/build/spack/opt/spack/darwin-mojave-x86_64/clang-10.0.0-apple/ascent-develop-4uxz6i5lbdw5sydsdozjzqjykzatbgkn
+ASCENT_DIR ?= ../../../..
 
 # See $(ASCENT_DIR)/share/ascent/ascent_config.mk for detailed linking info 
 include $(ASCENT_DIR)/share/ascent/ascent_config.mk
