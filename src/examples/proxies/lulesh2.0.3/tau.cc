@@ -60,8 +60,8 @@ int ascent_performance(conduit::Node &node, int length, int current_time, int cu
 
    conduit::Node scenes;
    scenes["s2/plots/p2/type"]  = "pseudocolor";
-   scenes["s2/plots/p2/field"] = "0_LagrangeLeapFrog_Inclusive_TIME";
-   scenes["s2/image_prefix"] = "PerfData_%04d";
+   scenes["s2/plots/p2/field"] = "0_LULESH_MAIN_LOOP_Inclusive_TIME";
+   scenes["s2/image_prefix"] = "LULESH_MAIN_LOOP_%04d";
    //double vec3[3];
    //vec3[0] = -1.0; vec3[1] = -1.0; vec3[2] = -1.0;
    //scenes["s2/renders/r1/camera/position"].set_float64_ptr(vec3,3);

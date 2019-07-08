@@ -164,7 +164,6 @@ Additional BSD Notice
 
 #include "conduit.hpp"
 #include "ascent.hpp"
-#include "perfstubs_api/Timer.h"
 
 using namespace conduit;
 using namespace ascent;
@@ -2901,7 +2900,6 @@ int main(int argc, char *argv[])
 
    while((locDom->time() < locDom->stoptime()) && (locDom->cycle() < opts.its)) {
      {
-        PERFSTUBS_SCOPED_TIMER("LagrangeLeapFrog");
         ASCENT_BLOCK_TIMER(LULESH_MAIN_LOOP)
         TimeIncrement(*locDom) ;
         LagrangeLeapFrog(*locDom) ;
@@ -2911,7 +2909,7 @@ int main(int argc, char *argv[])
                 locDom->cycle(), double(locDom->time()), double(locDom->deltatime()) ) ;
       }
       //-- begin calls to ascent -- //
-      if ( (locDom->cycle() % 1 == 0) || (locDom->cycle() == 0))
+      if ( (locDom->cycle() % 10 == 0) || (locDom->cycle() == 0))
       {
             char outFileName[30];
             sprintf(outFileName,"lulesh_image%03d",locDom->cycle());

@@ -65,7 +65,7 @@
 #ifdef ASCENT_PLATFORM_UNIX
 #include <sys/sysinfo.h>
 #endif
-
+#include "perfstubs_api/Timer.h"
 
 
 using namespace conduit;
@@ -133,6 +133,7 @@ parseLine(char *line)
 void
 BlockTimer::Start(const std::string &name)
 {
+    PERFSTUBS_TIMER_START(name);
 #ifdef ASCENT_MPI_ENABLED
     MPI_Comm_rank(MPI_COMM_WORLD, &s_rank);
     MPI_Barrier(MPI_COMM_WORLD);
@@ -161,6 +162,7 @@ BlockTimer::Start(const std::string &name)
 void
 BlockTimer::Stop(const std::string &name)
 {
+    PERFSTUBS_TIMER_STOP(name);
 #ifdef ASCENT_MPI_ENABLED
     //MPI_Barrier(MPI_COMM_WORLD);
 #endif
